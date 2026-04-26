@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PEDALA.AI — Turma da Madruga</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #1e1e2e;
+    --accent: #e8ff3c;
+    --accent2: #ff4d6d;
+    --accent3: #4dffb4;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --rank1: #ffd700;
+    --rank2: #c0c0c0;
+    --rank3: #cd7f32;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,15,0.95);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* HERO SELECTOR */
+  .hero {
+    padding: 60px 40px 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(232,255,60,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 8vw, 96px);
+    letter-spacing: 4px;
+    line-height: 0.9;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .hero-title span { color: var(--accent); }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 48px;
+  }
+
+  /* MEMBER GRID SELECTOR */
+  .selector-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 800px;
+    margin: 0 auto 48px;
+  }
+
+  .member-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 20px;
+    border-radius: 100px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .member-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .member-pill.active {
+    background: var(--accent);
+    color: #0a0a0f;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    padding: 0 40px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: none;
+  }
+
+  .main.visible { display: block; animation: fadeUp 0.4s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* PROFILE HEADER */
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 40px;
+    padding: 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(232,255,60,0.08) 0%, transparent 70%);
+  }
+
+  .profile-avatar {
+    width: 72px;
+    height: 72px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: #0a0a0f;
+    flex-shrink: 0;
+  }
+
+  .profile-info h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .profile-info .fullname {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .profile-info .since {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .since-dot {
+    width: 6px; height: 6px;
+    background: var(--accent3);
+    border-radius: 50%;
+  }
+
+  .rank-badge {
+    margin-left: auto;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .rank-badge .rank-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .rank-badge .rank-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .kpi-card:hover { border-color: var(--accent); }
+
+  .kpi-card .kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .kpi-card .kpi-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 1px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .kpi-card .kpi-unit {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .kpi-card .kpi-accent {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px;
+    width: 100%;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .kpi-card:hover .kpi-accent { transform: scaleX(1); }
+
+  /* TWO COL */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  /* SECTION CARD */
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* STAT ROW */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-row-label {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .stat-row-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* BAR CHART */
+  .bar-chart { }
+
+  .bar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .bar-item:last-child { margin-bottom: 0; }
+
+  .bar-label {
+    font-size: 12px;
+    color: var(--muted);
+    width: 100px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: var(--accent);
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .bar-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    width: 60px;
+    flex-shrink: 0;
+  }
+
+  /* RANKING TABLE */
+  .ranking-table {
+    width: 100%;
+  }
+
+  .ranking-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 100px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    border-radius: 6px;
+  }
+
+  .ranking-row:hover { background: rgba(232,255,60,0.03); }
+  .ranking-row:last-child { border-bottom: none; }
+
+  .ranking-row.highlight {
+    background: rgba(232,255,60,0.07);
+    border-color: rgba(232,255,60,0.2);
+  }
+
+  .rank-pos {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .rank-pos.gold { color: var(--rank1); }
+  .rank-pos.silver { color: var(--rank2); }
+  .rank-pos.bronze { color: var(--rank3); }
+  .rank-pos.you { color: var(--accent); }
+
+  .rank-name {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .rank-pts {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .rank-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .rank-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: var(--accent);
+  }
+
+  /* POWER GAUGE */
+  .gauges {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .gauge-item {
+    text-align: center;
+  }
+
+  .gauge-circle {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 8px;
+    position: relative;
+  }
+
+  .gauge-circle svg {
+    transform: rotate(-90deg);
+  }
+
+  .gauge-bg {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 6;
+  }
+
+  .gauge-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .gauge-label-val {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--text);
+  }
+
+  .gauge-name {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* FULL WIDTH */
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* ACHIEVEMENT CHIPS */
+  .achievements {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .chip {
+    background: rgba(232,255,60,0.1);
+    border: 1px solid rgba(232,255,60,0.2);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .chip.red {
+    background: rgba(255,77,109,0.1);
+    border-color: rgba(255,77,109,0.2);
+    color: var(--accent2);
+  }
+
+  .chip.green {
+    background: rgba(77,255,180,0.1);
+    border-color: rgba(77,255,180,0.2);
+    color: var(--accent3);
+  }
+
+  /* COMPARE MODE */
+  .compare-header {
+    text-align: center;
+    padding: 20px 0 40px;
+  }
+
+  .compare-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    transition: all 0.2s;
+    margin-top: 16px;
+  }
+
+  .compare-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    header { padding: 16px 20px; }
+    .hero { padding: 40px 20px 30px; }
+    .main { padding: 0 20px 60px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .gauges { grid-template-columns: repeat(3, 1fr); }
+    .ranking-row { grid-template-columns: 30px 1fr 70px; }
+    .rank-bar-track { display: none; }
+    .profile-header { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚴</div>
+    <div>
+      <div class="logo-text">PEDALA.AI</div>
+      <div class="logo-sub">Turma da Madruga · Rise Hub</div>
+    </div>
+  </div>
+  <div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">06h10 🌙</div>
+</header>
+
+<div class="hero">
+  <div class="hero-label">Seu dashboard de performance</div>
+  <div class="hero-title">TURMA DA<br><span>MADRUGA</span></div>
+  <div class="hero-sub">Selecione seu nome para ver seus dados</div>
+
+  <div class="selector-grid" id="selectorGrid"></div>
+</div>
+
+<div class="main" id="mainContent">
+  <!-- Profile Header -->
+  <div class="profile-header" id="profileHeader"></div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- Two Col -->
+  <div class="two-col">
+    <div class="section-card">
+      <div class="section-title">Ranking do Grupo</div>
+      <div class="ranking-table" id="rankingTable"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Performance por Métrica</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+  </div>
+
+  <!-- Two Col -->
+  <div class="two-col">
+    <div class="section-card">
+      <div class="section-title">Dados de Potência & Velocidade</div>
+      <div id="powerStats"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Dados de Pedalada</div>
+      <div id="rpmStats"></div>
+    </div>
+  </div>
+
+  <!-- Achievements -->
+  <div class="section-card" style="margin-top:12px;">
+    <div class="section-title">Destaques</div>
+    <div class="achievements" id="achievements"></div>
+  </div>
+</div>
+
+<script>
+const DATA = [{"id":"489949","apelido":"Flavia","nome":"Flavia Merenciano","aulas":754,"pontos":427104,"calorias":273277,"primeira_aula":"2021-08-07","peso_kg":65.0,"duracao_h":9.5,"distancia_km":11237.1,"avg_rpm":68.0,"max_rpm":180.0,"avg_power":130.0,"max_power":893.0,"avg_power_wkg":1.94,"max_power_wkg":13.74,"avg_speed":20.68,"max_speed":52.0,"ftp":130.0,"hr_max_bpm":221.0},{"id":"299892","apelido":"Rosana","nome":"Rosana Vaz","aulas":631,"pontos":398481,"calorias":286819,"primeira_aula":"2019-04-19","peso_kg":68.0,"duracao_h":7.9,"distancia_km":10924.6,"avg_rpm":70.0,"max_rpm":164.0,"avg_power":155.0,"max_power":1434.0,"avg_power_wkg":2.38,"max_power_wkg":21.09,"avg_speed":23.09,"max_speed":63.0,"ftp":150.0,"hr_max_bpm":221.0},{"id":"664813","apelido":"Day","nome":"Dayane Alves do Couto","aulas":439,"pontos":270472,"calorias":176312,"primeira_aula":"2023-03-03","peso_kg":65.77,"duracao_h":5.6,"distancia_km":7242.7,"avg_rpm":70.0,"max_rpm":180.0,"avg_power":142.0,"max_power":690.0,"avg_power_wkg":2.17,"max_power_wkg":10.49,"avg_speed":21.92,"max_speed":47.0,"ftp":150.0,"hr_max_bpm":220.0},{"id":"471608","apelido":"Michelle","nome":"MICHELLE FURTADO","aulas":411,"pontos":265252,"calorias":200478,"primeira_aula":"2021-06-05","peso_kg":81.0,"duracao_h":5.2,"distancia_km":7523.3,"avg_rpm":69.0,"max_rpm":124.0,"avg_power":169.0,"max_power":1277.0,"avg_power_wkg":2.0,"max_power_wkg":14.85,"avg_speed":24.27,"max_speed":60.0,"ftp":174.0,"hr_max_bpm":220.0},{"id":"563426","apelido":"Mariana","nome":"Mariana Lobo","aulas":380,"pontos":250417,"calorias":186185,"primeira_aula":"2022-05-02","peso_kg":64.0,"duracao_h":4.8,"distancia_km":7081.0,"avg_rpm":69.0,"max_rpm":180.0,"avg_power":176.0,"max_power":862.0,"avg_power_wkg":2.77,"max_power_wkg":15.67,"avg_speed":24.71,"max_speed":51.0,"ftp":185.0,"hr_max_bpm":220.0},{"id":"475813","apelido":"Jefe","nome":"JEFERSON FURTADO","aulas":403,"pontos":246203,"calorias":249930,"primeira_aula":"2021-06-05","peso_kg":80.0,"duracao_h":5.0,"distancia_km":8089.0,"avg_rpm":69.0,"max_rpm":147.0,"avg_power":210.0,"max_power":1306.0,"avg_power_wkg":2.63,"max_power_wkg":16.33,"avg_speed":27.19,"max_speed":60.0,"ftp":210.0,"hr_max_bpm":220.0},{"id":"491545","apelido":"Bia","nome":"Beatriz Ferraz","aulas":443,"pontos":243514,"calorias":186844,"primeira_aula":"2021-09-01","peso_kg":73.0,"duracao_h":5.6,"distancia_km":7205.3,"avg_rpm":70.0,"max_rpm":160.0,"avg_power":149.0,"max_power":777.0,"avg_power_wkg":2.03,"max_power_wkg":14.13,"avg_speed":21.96,"max_speed":49.0,"ftp":170.0,"hr_max_bpm":221.0},{"id":"658217","apelido":"Dani","nome":"DANIEL LUIZ DEMARCHI","aulas":348,"pontos":218628,"calorias":180808,"primeira_aula":"2023-02-14","peso_kg":97.0,"duracao_h":4.4,"distancia_km":6748.5,"avg_rpm":75.0,"max_rpm":180.0,"avg_power":191.0,"max_power":1050.0,"avg_power_wkg":2.08,"max_power_wkg":14.0,"avg_speed":25.86,"max_speed":56.0,"ftp":195.0,"hr_max_bpm":220.0},{"id":"657228","apelido":"Simoni","nome":"Simoni Takahashi Oliveira Brito","aulas":270,"pontos":191056,"calorias":123749,"primeira_aula":"2023-02-14","peso_kg":50.0,"duracao_h":3.4,"distancia_km":4750.7,"avg_rpm":74.0,"max_rpm":150.0,"avg_power":162.0,"max_power":1254.0,"avg_power_wkg":3.23,"max_power_wkg":25.08,"avg_speed":23.44,"max_speed":59.0,"ftp":145.0,"hr_max_bpm":228.0},{"id":"317517","apelido":"Larissa","nome":"Larissa Galindo","aulas":397,"pontos":179543,"calorias":131723,"primeira_aula":"2019-08-09","peso_kg":60.0,"duracao_h":4.7,"distancia_km":5162.8,"avg_rpm":64.0,"max_rpm":161.0,"avg_power":120.0,"max_power":1117.0,"avg_power_wkg":1.98,"max_power_wkg":18.62,"avg_speed":19.39,"max_speed":57.0,"ftp":131.0,"hr_max_bpm":221.0},{"id":"1050391","apelido":"Palumbo","nome":"Jorge Palumbo","aulas":311,"pontos":169010,"calorias":152180,"primeira_aula":"2024-12-16","peso_kg":86.0,"duracao_h":3.8,"distancia_km":5625.1,"avg_rpm":72.0,"max_rpm":180.0,"avg_power":177.0,"max_power":1442.0,"avg_power_wkg":1.95,"max_power_wkg":16.77,"avg_speed":24.62,"max_speed":63.0,"ftp":180.0,"hr_max_bpm":220.0},{"id":"695893","apelido":"Mari Prochet","nome":"Mariana Prochet","aulas":299,"pontos":159828,"calorias":108555,"primeira_aula":"2023-05-16","peso_kg":58.0,"duracao_h":3.8,"distancia_km":4500.1,"avg_rpm":64.0,"max_rpm":180.0,"avg_power":131.0,"max_power":885.0,"avg_power_wkg":2.25,"max_power_wkg":15.26,"avg_speed":20.79,"max_speed":52.0,"ftp":140.0,"hr_max_bpm":220.0},{"id":"313121","apelido":"Grespan","nome":"Marco Aurelio Grespan","aulas":224,"pontos":116656,"calorias":118712,"primeira_aula":"2019-06-04","peso_kg":111.0,"duracao_h":2.5,"distancia_km":3812.4,"avg_rpm":70.0,"max_rpm":180.0,"avg_power":199.0,"max_power":1998.0,"avg_power_wkg":1.71,"max_power_wkg":17.37,"avg_speed":26.07,"max_speed":71.0,"ftp":201.0,"hr_max_bpm":220.0},{"id":"1006056","apelido":"Simone","nome":"Simone Ozawa","aulas":203,"pontos":115940,"calorias":81984,"primeira_aula":"2024-08-28","peso_kg":69.0,"duracao_h":2.6,"distancia_km":3313.9,"avg_rpm":67.0,"max_rpm":136.0,"avg_power":138.0,"max_power":909.0,"avg_power_wkg":2.13,"max_power_wkg":14.2,"avg_speed":21.5,"max_speed":52.0,"ftp":142.0,"hr_max_bpm":221.0},{"id":"1068785","apelido":"Hillary","nome":"Hillary Mori","aulas":165,"pontos":91863,"calorias":62377,"primeira_aula":"2025-01-24","peso_kg":62.0,"duracao_h":2.1,"distancia_km":2567.1,"avg_rpm":64.0,"max_rpm":177.0,"avg_power":132.0,"max_power":830.0,"avg_power_wkg":2.02,"max_power_wkg":12.77,"avg_speed":20.57,"max_speed":51.0,"ftp":148.0,"hr_max_bpm":220.0},{"id":"1068786","apelido":"Gustavo","nome":"gustavo santos","aulas":150,"pontos":83360,"calorias":80729,"primeira_aula":"2025-01-24","peso_kg":80.0,"duracao_h":1.9,"distancia_km":2915.3,"avg_rpm":67.0,"max_rpm":180.0,"avg_power":203.0,"max_power":832.0,"avg_power_wkg":2.5,"max_power_wkg":10.02,"avg_speed":25.93,"max_speed":49.0,"ftp":210.0,"hr_max_bpm":220.0},{"id":"1117129","apelido":"Andrea","nome":"Andrea Ferraz","aulas":117,"pontos":59242,"calorias":49121,"primeira_aula":"2025-05-13","peso_kg":72.0,"duracao_h":1.5,"distancia_km":1940.0,"avg_rpm":67.0,"max_rpm":142.0,"avg_power":141.0,"max_power":808.0,"avg_power_wkg":2.39,"max_power_wkg":14.69,"avg_speed":21.81,"max_speed":50.0,"ftp":176.0,"hr_max_bpm":220.0}];
+
+const maxPts = Math.max(...DATA.map(d => d.pontos));
+let currentMember = null;
+
+// Build selector
+const grid = document.getElementById('selectorGrid');
+DATA.forEach(m => {
+  const pill = document.createElement('button');
+  pill.className = 'member-pill';
+  pill.textContent = m.apelido;
+  pill.onclick = () => selectMember(m, pill);
+  grid.appendChild(pill);
+});
+
+function selectMember(m, pill) {
+  document.querySelectorAll('.member-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  currentMember = m;
+  renderDashboard(m);
+  document.getElementById('mainContent').classList.add('visible');
+  setTimeout(() => document.getElementById('mainContent').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function fmt(n) {
+  return n.toLocaleString('pt-BR');
+}
+
+function getRank(m) {
+  return DATA.findIndex(d => d.id === m.id) + 1;
+}
+
+function rankClass(pos) {
+  if (pos === 1) return 'gold';
+  if (pos === 2) return 'silver';
+  if (pos === 3) return 'bronze';
+  return '';
+}
+
+function getPercentileRank(m, field) {
+  const vals = DATA.map(d => d[field]).sort((a, b) => a - b);
+  const myVal = m[field];
+  const below = vals.filter(v => v < myVal).length;
+  return Math.round((below / vals.length) * 100);
+}
+
+function renderDashboard(m) {
+  const rank = getRank(m);
+  
+  // Profile Header
+  document.getElementById('profileHeader').innerHTML = `
+    <div class="profile-avatar">${m.apelido[0]}</div>
+    <div class="profile-info">
+      <h1>${m.apelido.toUpperCase()}</h1>
+      <div class="fullname">${m.nome}</div>
+      <div class="since"><span class="since-dot"></span> Pedalando desde ${m.primeira_aula.split('-').reverse().join('/')}</div>
+    </div>
+    <div class="rank-badge">
+      <div class="rank-num">#${rank}</div>
+      <div class="rank-label">no grupo</div>
+    </div>
+  `;
+
+  // KPIs
+  const ptsPorAula = m.aulas > 0 ? Math.round(m.pontos / m.aulas) : 0;
+  const kmPorAula = m.aulas > 0 ? (m.distancia_km / m.aulas).toFixed(1) : 0;
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Total de Aulas</div>
+      <div class="kpi-value">${fmt(m.aulas)}</div>
+      <div class="kpi-unit">sessões</div>
+      <div class="kpi-accent"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Pontos Totais</div>
+      <div class="kpi-value">${fmt(m.pontos)}</div>
+      <div class="kpi-unit">pts acumulados</div>
+      <div class="kpi-accent"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Distância Total</div>
+      <div class="kpi-value">${fmt(m.distancia_km)}</div>
+      <div class="kpi-unit">km pedalados</div>
+      <div class="kpi-accent"></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Calorias Queimadas</div>
+      <div class="kpi-value">${fmt(m.calorias)}</div>
+      <div class="kpi-unit">kcal totais</div>
+      <div class="kpi-accent"></div>
+    </div>
+  `;
+
+  // Ranking Table
+  let rankingHTML = '';
+  DATA.forEach((d, i) => {
+    const pos = i + 1;
+    const pct = Math.round((d.pontos / maxPts) * 100);
+    const isMe = d.id === m.id;
+    rankingHTML += `
+      <div class="ranking-row ${isMe ? 'highlight' : ''}">
+        <div class="rank-pos ${isMe ? 'you' : rankClass(pos)}">${pos}</div>
+        <div class="rank-name">${d.apelido}${isMe ? ' 👈' : ''}</div>
+        <div class="rank-pts">${fmt(d.pontos)}</div>
+        <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  });
+  document.getElementById('rankingTable').innerHTML = rankingHTML;
+
+  // Bar Chart — comparação de métricas com a média do grupo
+  const avgPower = Math.round(DATA.reduce((s, d) => s + d.avg_power, 0) / DATA.length);
+  const avgFtp = Math.round(DATA.reduce((s, d) => s + d.ftp, 0) / DATA.length);
+  const avgSpeed = (DATA.reduce((s, d) => s + d.avg_speed, 0) / DATA.length).toFixed(1);
+  const avgRpm = Math.round(DATA.reduce((s, d) => s + d.avg_rpm, 0) / DATA.length);
+  const avgPwkg = (DATA.reduce((s, d) => s + d.avg_power_wkg, 0) / DATA.length).toFixed(2);
+
+  const maxPower = Math.max(...DATA.map(d => d.avg_power));
+  const maxFtp = Math.max(...DATA.map(d => d.ftp));
+  const maxSpeed2 = Math.max(...DATA.map(d => d.avg_speed));
+  const maxRpm = Math.max(...DATA.map(d => d.avg_rpm));
+  const maxPwkg = Math.max(...DATA.map(d => d.avg_power_wkg));
+
+  const bars = [
+    { label: 'Potência Média', val: m.avg_power, max: maxPower, unit: 'W', avg: avgPower },
+    { label: 'FTP', val: m.ftp, max: maxFtp, unit: 'W', avg: avgFtp },
+    { label: 'Vel. Média', val: m.avg_speed, max: maxSpeed2, unit: 'km/h', avg: avgSpeed },
+    { label: 'RPM Médio', val: m.avg_rpm, max: maxRpm, unit: 'rpm', avg: avgRpm },
+    { label: 'W/kg Médio', val: m.avg_power_wkg, max: maxPwkg, unit: 'w/kg', avg: avgPwkg },
+  ];
+
+  let barHTML = '';
+  bars.forEach(b => {
+    const pct = Math.round((b.val / b.max) * 100);
+    const aboveAvg = b.val >= b.avg;
+    barHTML += `
+      <div class="bar-item">
+        <div class="bar-label">${b.label}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:${aboveAvg ? 'var(--accent)' : 'var(--accent2)'}"></div>
+        </div>
+        <div class="bar-val">${b.val} ${b.unit}</div>
+      </div>
+    `;
+  });
+  document.getElementById('barChart').innerHTML = barHTML;
+
+  // Power Stats
+  document.getElementById('powerStats').innerHTML = `
+    <div class="stat-row">
+      <div class="stat-row-label">Potência Média</div>
+      <div class="stat-row-value">${m.avg_power} W</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">Potência Máxima</div>
+      <div class="stat-row-value">${m.max_power} W</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">FTP</div>
+      <div class="stat-row-value">${m.ftp} W</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">W/kg Médio</div>
+      <div class="stat-row-value">${m.avg_power_wkg} w/kg</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">W/kg Máximo</div>
+      <div class="stat-row-value">${m.max_power_wkg} w/kg</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">Vel. Média</div>
+      <div class="stat-row-value">${m.avg_speed} km/h</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">Vel. Máxima</div>
+      <div class="stat-row-value">${m.max_speed} km/h</div>
+    </div>
+  `;
+
+  // RPM Stats
+  const ptsPorAulaVal = m.aulas > 0 ? Math.round(m.pontos / m.aulas) : 0;
+  const calPorAula = m.aulas > 0 ? Math.round(m.calorias / m.aulas) : 0;
+  document.getElementById('rpmStats').innerHTML = `
+    <div class="stat-row">
+      <div class="stat-row-label">RPM Médio</div>
+      <div class="stat-row-value">${m.avg_rpm} rpm</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">RPM Máximo</div>
+      <div class="stat-row-value">${m.max_rpm} rpm</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">FC Máxima</div>
+      <div class="stat-row-value">${m.hr_max_bpm} bpm</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">Pts por Aula</div>
+      <div class="stat-row-value">${fmt(ptsPorAulaVal)}</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">Cal por Aula</div>
+      <div class="stat-row-value">${calPorAula} kcal</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">Km por Aula</div>
+      <div class="stat-row-value">${(m.distancia_km / m.aulas).toFixed(1)} km</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-row-label">Peso</div>
+      <div class="stat-row-value">${m.peso_kg} kg</div>
+    </div>
+  `;
+
+  // Achievements
+  const chips = [];
+  if (rank === 1) chips.push({ label: '🏆 Líder do Grupo', type: '' });
+  if (rank <= 3) chips.push({ label: `🥇 Top ${rank} do Grupo`, type: '' });
+  if (m.aulas >= 500) chips.push({ label: '🔥 +500 Aulas', type: '' });
+  if (m.aulas >= 300) chips.push({ label: '💪 +300 Aulas', type: '' });
+  if (m.max_power >= 1000) chips.push({ label: '⚡ +1000W Peak', type: 'green' });
+  if (m.avg_power_wkg >= 2.5) chips.push({ label: '🚀 +2.5 W/kg', type: 'green' });
+  if (m.ftp >= 200) chips.push({ label: '🎯 FTP Elite +200W', type: 'green' });
+  if (m.avg_speed >= 25) chips.push({ label: '💨 Velocista +25km/h', type: 'green' });
+  if (m.distancia_km >= 10000) chips.push({ label: '🌍 +10.000 km', type: '' });
+  if (m.distancia_km >= 5000) chips.push({ label: '🛣️ +5.000 km', type: '' });
+  if (m.max_rpm >= 180) chips.push({ label: '🌪️ Max RPM 180', type: 'green' });
+  if (m.avg_rpm >= 72) chips.push({ label: '⚙️ RPM Alto', type: '' });
+
+  const pctilePts = getPercentileRank(m, 'pontos');
+  if (pctilePts >= 80) chips.push({ label: `📊 Top ${100-pctilePts}% em Pontos`, type: '' });
+
+  if (chips.length === 0) chips.push({ label: '🌱 Começando a jornada!', type: '' });
+
+  document.getElementById('achievements').innerHTML = chips.map(c =>
+    `<span class="chip ${c.type}">${c.label}</span>`
+  ).join('');
+}
+</script>
+</body>
+</html>
