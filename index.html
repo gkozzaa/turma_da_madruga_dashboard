@@ -803,7 +803,6 @@ function renderProfessor(m) {
     <div class="stat-row"><div class="stat-row-label">Pts por Aula</div><div class="stat-row-value">${fmt(ptsPorAula)}</div></div>
     <div class="stat-row"><div class="stat-row-label">Cal por Aula</div><div class="stat-row-value">${calPorAula} kcal</div></div>
     <div class="stat-row"><div class="stat-row-label">Km por Aula</div><div class="stat-row-value">${(m.distancia_km / m.aulas).toFixed(1)} km</div></div>
-    <div class="stat-row"><div class="stat-row-label">Peso</div><div class="stat-row-value">${m.peso_kg} kg</div></div>
   `;
 
   document.getElementById('achievements').innerHTML = `
@@ -997,10 +996,6 @@ function renderDashboard(m) {
     <div class="stat-row">
       <div class="stat-row-label">Km por Aula</div>
       <div class="stat-row-value">${(m.distancia_km / m.aulas).toFixed(1)} km</div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-row-label">Peso</div>
-      <div class="stat-row-value">${m.peso_kg} kg</div>
     </div>
   `;
 
