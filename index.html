@@ -1112,8 +1112,8 @@ function downloadCSV() {
   URL.revokeObjectURL(url);
 }
 
+function renderEvolution(m) {
   const pillsEl = document.getElementById('metricPills');
-  if (!pillsEl) return;
   pillsEl.innerHTML = '';
   GOOD_METRICS.forEach(metric => {
     const pill = document.createElement('button');
